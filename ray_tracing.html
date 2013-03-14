@@ -400,13 +400,13 @@ void main()
 	Ray ray = Ray(g_rayOrigin, normalize(vec3((2.0 * screenUv - 1.0) * AspectRatio, 1.0)));	
 		
 	float dist;
-	float objectId = intersectWithScene(ray, dist);	
+	float objectId = intersectWithScene(ray, dist);
 	vec3 color = getColor(objectId, ray, dist);
 	
 	//tone-mapping
-	//const float exposure = 1.6;
-	//color *= exposure;
-	//color /= color + 1.0;
+	/*const float exposure = 1.6;
+	color *= exposure;
+	color /= color + 1.0;*/
 
 	gl_FragColor = vec4( color, 1.0 );
 }
@@ -659,8 +659,8 @@ float cnoise(vec3 P)
 
 			function onDocumentMouseMove( event ) {
 
-				materialScreen.uniforms.mouse.x = event.clientX / window.innerWidth;
-				materialScreen.uniforms.mouse.y = 1 - event.clientY / window.innerHeight;
+				vUniforms.mouse.value.x = event.clientX / window.innerWidth;
+				vUniforms.mouse.value.y = 1 - event.clientY / window.innerHeight;
 
 			}
 
@@ -677,7 +677,7 @@ float cnoise(vec3 P)
 
 			function render() {
 
-				materialScreen.uniforms.time.value = (Date.now() - startTime) * 0.001;
+				vUniforms.time.value = (Date.now() - startTime) * 0.001;
 
 				renderer.clear();
 
