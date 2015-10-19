@@ -204,6 +204,8 @@ float sinSumAbsNoise(float x, vec2 p) {
     return sin(x + sumAbsNoise(p));
 }
 
+// Fractal sum of noise. At each step we double the frequency and halve the amplitude, 
+// repeating the noise patterns at different scales.
 float sumNoise(vec3 p)
 {
     float f = 0.0;
@@ -215,6 +217,8 @@ float sumNoise(vec3 p)
     return f;
 }
 
+// Same as above but taking the absolute value of the noise primitive, 
+// which creates discontinuities in the gradients. It is known as turbulence function.
 float sumAbsNoise(vec3 p)
 {
     float f = 0.0;
@@ -226,6 +230,7 @@ float sumAbsNoise(vec3 p)
     return f;
 }
 
+// Uses the turbulence function from above to do a phase shift in a simple stripe pattern.
 float sinSumAbsNoise(float x, vec3 p) {
     return sin(x + sumAbsNoise(p));
 }
@@ -240,10 +245,13 @@ vec3 shade(Material mat, vec3 normal, vec3 lightDir, vec3 viewDir, vec3 reflectD
     return mat.diffuse * (NdotL * shadow + Ambient) + shadow * mat.glossiness * (spec + RdotV * reflectedColor);
 }
 
-vec3 getSkyColor(vec3 origin, vec3 skyPoint, vec3 sunPos)
+vec3 getSkyColor(vec3 rayOrigin, vec3 skyPoint, vec3 sunPos)
 {
-    vec3 skyDir = normalize(skyPoint - origin);
-    vec3 sunDir = normalize(sunPos - origin);
+    vec2 skyUv = sphereTexCoords(skyPoint);
+    vec3 clouds = 1.4*vec3(sumNoise(0.002*skyPoint + vec3(0.02, 0.02, 0.03)*time))*smoothstep(0.0, 0.5, skyUv.y);
+
+    vec3 skyDir = normalize(skyPoint - rayOrigin);
+    vec3 sunDir = normalize(sunPos - rayOrigin);
     float sunDot = dot(skyDir, sunDir);
         
     vec3 rays = vec3(0.7 * pow(max(0.0, sunDot), 50.0));    
@@ -251,12 +259,9 @@ vec3 getSkyColor(vec3 origin, vec3 skyPoint, vec3 sunPos)
     
     float curve = 1.0 - pow(1.0 - max(skyDir.y, 0.1), 10.0);
     vec3 sky = mix(HorizonColor, SkyColor, curve);  
-    
-    vec2 uv = sphereTexCoords(skyPoint);
-    vec3 clouds = 1.4*vec3(sumNoise(0.002*skyPoint + vec3(0.02, 0.0, 0.03)*time))*smoothstep(0.0, 0.5, uv.y);
 
     float alpha = 1.0 - clouds.x;
-    return alpha * (sky + sun + rays) + clouds;
+    return clouds + alpha * (sky + sun + rays);
 }
 
 vec3 getSphereColorSimple(Ray ray, float dist)
@@ -354,7 +359,7 @@ vec3 getPlaneColor(Ray ray, float dist)
     float distToLight = length(vecToLight);
     vec3 lightDir = normalize(vecToLight);
     
-    //shadow
+    // Shadow
     Ray rayToLight = Ray(point + lightDir * EPSILON, lightDir);
     float ts = intersectSphere(g_sphere, rayToLight);
     float shadow = 1.0;
@@ -365,9 +370,9 @@ vec3 getPlaneColor(Ray ray, float dist)
     float distToSphere = length(vecToSphere);
     shadow *= smoothstep(0.0, 4.5, distToSphere);   
     
+    // Reflection
     vec3 reflectedColor = vec3(0.0);
-    vec3 reflectDir = reflect(ray.dir, g_plane.normal);     
-    
+    vec3 reflectDir = reflect(ray.dir, g_plane.normal);
     Ray reflectedRay = Ray(point + reflectDir * EPSILON, reflectDir);
     float reflectedObjectId = intersectWithScene(reflectedRay, dist);
     reflectedColor = getColorSimple(reflectedObjectId, reflectedRay, dist);
@@ -400,12 +405,12 @@ void main()
     vec3 rayOrigin = vec3(4.0 * (mouse.x - 0.5), 2.0 * mouse.y, 0.5);
 
     const float theta = PI/3.0;
-    float phi = (sin(0.2 * time) * 0.5 + 0.5) * PI * 0.6;
+    float phi = (sin(0.2 * time) * 0.5 + 0.1) * PI * 0.6;
     g_sunPos = rayOrigin + FAR * vec3(cos(theta)*sin(phi), sin(theta)*sin(phi), cos(phi));
 
     vec2 screenUv = gl_FragCoord.xy / resolution.xy;
     vec2 AspectRatio = vec2(resolution.x / resolution.y, 1.0);
-    Ray ray = Ray(rayOrigin, normalize(vec3((2.0 * screenUv - 1.0) * AspectRatio, 1.0))); 
+    Ray ray = Ray(rayOrigin, normalize(vec3((2.0 * screenUv - 1.0) * AspectRatio, 1.0)));
         
     float dist;
     float objectId = intersectWithScene(ray, dist);
