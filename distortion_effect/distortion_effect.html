@@ -1,750 +1,750 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>three.js webgl - Distortion effect</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				font-family: Monospace;
-				color: #aaa;
-				background-color: #000;
-				margin: 0px;
-				overflow: hidden;
-			}
-		</style>
-	</head>
-	<body>
+    <head>
+        <title>three.js webgl - Distortion effect</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                font-family: Monospace;
+                color: #aaa;
+                background-color: #000;
+                margin: 0px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
 
-		<script src="three.min.js"></script>
+        <script src="three.min.js"></script>
 
-		<script src="js/libs/stats.min.js"></script>
-		<script src="js/libs/tween.min.js"></script>
-		<script src="js/Sparks.js"></script>
-		<script src='js/libs/dat.gui.min.js'></script>
+        <script src="js/libs/stats.min.js"></script>
+        <script src="js/libs/tween.min.js"></script>
+        <script src="js/Sparks.js"></script>
+        <script src='js/libs/dat.gui.min.js'></script>
 
-		<script src="js/shaders/CopyShader.js"></script>
+        <script src="js/shaders/CopyShader.js"></script>
 
-		<script src="js/postprocessing/EffectComposer.js"></script>
-		<script src="js/postprocessing/RenderPass.js"></script>
-		<script src="js/postprocessing/ShaderPass.js"></script>
-		<script src="js/postprocessing/MaskPass.js"></script>
+        <script src="js/postprocessing/EffectComposer.js"></script>
+        <script src="js/postprocessing/RenderPass.js"></script>
+        <script src="js/postprocessing/ShaderPass.js"></script>
+        <script src="js/postprocessing/MaskPass.js"></script>
 
-		<script src="js/ImprovedNoise.js"></script>
+        <script src="js/ImprovedNoise.js"></script>
 
-		<script type="x-shader/x-vertex" id="vertexshader">
+        <script type="x-shader/x-vertex" id="vertexshader">
 
-			attribute float size;
-			attribute vec3 pcolor;
+            attribute float size;
+            attribute vec3 pcolor;
 
-			varying vec3 vColor;
+            varying vec3 vColor;
 
-			void main() 
-			{
-				vColor = pcolor;
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-				gl_PointSize = size * ( 200.0 / length( mvPosition.xyz ) );
-				gl_Position = projectionMatrix * mvPosition;
-			}
+            void main() 
+            {
+                vColor = pcolor;
+                vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                gl_PointSize = size * ( 200.0 / length( mvPosition.xyz ) );
+                gl_Position = projectionMatrix * mvPosition;
+            }
 
-		</script>
+        </script>
 
-		<script type="x-shader/x-fragment" id="fragmentshader">
+        <script type="x-shader/x-fragment" id="fragmentshader">
 
-			uniform sampler2D texture;
+            uniform sampler2D texture;
 
-			varying vec3 vColor;
+            varying vec3 vColor;
 
-			void main() 
-			{
-				vec4 outColor = texture2D( texture, gl_PointCoord );
-				gl_FragColor = outColor * vec4( vColor, 1.0 );
-			}
+            void main() 
+            {
+                vec4 outColor = texture2D( texture, gl_PointCoord );
+                gl_FragColor = outColor * vec4( vColor, 1.0 );
+            }
 
-		</script>
+        </script>
 
-		<!-- LAVA SHADERS -->
+        <!-- LAVA SHADERS -->
 
-		<script id="lavaFragmentShader" type="x-shader/x-fragment">
+        <script id="lavaFragmentShader" type="x-shader/x-fragment">
 
-			uniform float time;
-			uniform vec2 resolution;
+            uniform float time;
+            uniform vec2 resolution;
 
-			uniform float fogDensity;
-			uniform vec3 fogColor;
+            uniform float fogDensity;
+            uniform vec3 fogColor;
 
-			uniform sampler2D texture1;
-			uniform sampler2D texture2;
+            uniform sampler2D texture1;
+            uniform sampler2D texture2;
 
-			varying vec2 vUv;
+            varying vec2 vUv;
 
-			void main( void ) 
-			{
-				vec4 noise = texture2D( texture1, vUv );
-				vec2 T1 = vUv + vec2( 1.5, -1.5 ) * time * 0.02;
-				vec2 T2 = vUv + vec2( -0.5, 2.0 ) * time * 0.01;
+            void main( void ) 
+            {
+                vec4 noise = texture2D( texture1, vUv );
+                vec2 T1 = vUv + vec2( 1.5, -1.5 ) * time * 0.02;
+                vec2 T2 = vUv + vec2( -0.5, 2.0 ) * time * 0.01;
 
-				T1.x += noise.x * 2.0;
-				T1.y += noise.y * 2.0;
-				T2.x -= noise.y * 0.2;
-				T2.y += noise.z * 0.2;
+                T1.x += noise.x * 2.0;
+                T1.y += noise.y * 2.0;
+                T2.x -= noise.y * 0.2;
+                T2.y += noise.z * 0.2;
 
-				float p = texture2D( texture1, T1 * 2.0 ).a;
+                float p = texture2D( texture1, T1 * 2.0 ).a;
 
-				vec4 color = texture2D( texture2, T2 * 2.0 );
-				vec4 temp = color * ( vec4( p, p, p, p ) * 2.0 ) + ( color * color - 0.1 );
+                vec4 color = texture2D( texture2, T2 * 2.0 );
+                vec4 temp = color * ( vec4( p, p, p, p ) * 2.0 ) + ( color * color - 0.1 );
 
-				if( temp.r > 1.0 ){ temp.bg += clamp( temp.r - 2.0, 0.0, 100.0 ); }
-				if( temp.g > 1.0 ){ temp.rb += temp.g - 1.0; }
-				if( temp.b > 1.0 ){ temp.rg += temp.b - 1.0; }
+                if( temp.r > 1.0 ){ temp.bg += clamp( temp.r - 2.0, 0.0, 100.0 ); }
+                if( temp.g > 1.0 ){ temp.rb += temp.g - 1.0; }
+                if( temp.b > 1.0 ){ temp.rg += temp.b - 1.0; }
 
-				gl_FragColor = temp;
-			}
+                gl_FragColor = temp;
+            }
 
-		</script>
+        </script>
 
-		<script id="lavaVertexShader" type="x-shader/x-vertex">
+        <script id="lavaVertexShader" type="x-shader/x-vertex">
 
-			uniform vec2 uvScale;
-			varying vec2 vUv;
+            uniform vec2 uvScale;
+            varying vec2 vUv;
 
-			void main()
-			{
-				vUv = uvScale * uv;
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-				gl_Position = projectionMatrix * mvPosition;
-			}
+            void main()
+            {
+                vUv = uvScale * uv;
+                vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                gl_Position = projectionMatrix * mvPosition;
+            }
 
-		</script>
+        </script>
 
-		<!-- DISTORTION SHADERS -->
+        <!-- DISTORTION SHADERS -->
 
-		<script id="distortionVertexShader" type="x-shader/x-vertex">
-			
-			uniform vec2 noiseUvScale;
+        <script id="distortionVertexShader" type="x-shader/x-vertex">
+            
+            uniform vec2 noiseUvScale;
 
-			varying vec2 vUv;
-			varying vec2 vNoiseUv;
+            varying vec2 vUv;
+            varying vec2 vNoiseUv;
 
-			void main()
-			{
-				vUv = uv;
-				vNoiseUv = noiseUvScale * uv;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );				 
-			}
+            void main()
+            {
+                vUv = uv;
+                vNoiseUv = noiseUvScale * uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );                
+            }
 
-		</script>
+        </script>
 
-		<script id="distortionFragmentShader" type="x-shader/x-fragment">
-						
-			uniform float scale;			
+        <script id="distortionFragmentShader" type="x-shader/x-fragment">
+                        
+            uniform float scale;            
 
-			uniform sampler2D maskTex;
-			uniform sampler2D noiseTex;
-			uniform sampler2D screenTex;
+            uniform sampler2D maskTex;
+            uniform sampler2D noiseTex;
+            uniform sampler2D screenTex;
 
-			varying vec2 vUv;
-			varying vec2 vNoiseUv;
+            varying vec2 vUv;
+            varying vec2 vNoiseUv;
 
-			void main()
-			{
-			#ifdef NO_DISTORTION
-				gl_FragColor = texture2D(screenTex, vUv);
-				return;
-			#endif
+            void main()
+            {
+            #ifdef NO_DISTORTION
+                gl_FragColor = texture2D(screenTex, vUv);
+                return;
+            #endif
 
-				vec3 mask = texture2D(maskTex, vUv).rgb;
-				float distortionStrength = min(1.0, dot(mask, mask));
+                vec3 mask = texture2D(maskTex, vUv).rgb;
+                float distortionStrength = min(1.0, dot(mask, mask));
 
-			#ifdef VIEW_DISTORTION_MASK
-				gl_FragColor = vec4(distortionStrength);
-				return;
-			#endif
+            #ifdef VIEW_DISTORTION_MASK
+                gl_FragColor = vec4(distortionStrength);
+                return;
+            #endif
 
-				vec2 noise = texture2D(noiseTex, vNoiseUv).rg;
-				noise = noise * scale * distortionStrength;
+                vec2 noise = texture2D(noiseTex, vNoiseUv).rg;
+                noise = noise * scale * distortionStrength;
 
-				vec3 distorted = texture2D(screenTex, vUv + noise).rgb;
-				gl_FragColor = vec4(distorted, 1.0);
-			}
+                vec3 distorted = texture2D(screenTex, vUv + noise).rgb;
+                gl_FragColor = vec4(distorted, 1.0);
+            }
 
-		</script>
+        </script>
 
-		<script id="simpleVertexShader" type="x-shader/x-vertex">
-			
-			varying vec2 vUv;
+        <script id="simpleVertexShader" type="x-shader/x-vertex">
+            
+            varying vec2 vUv;
 
-			void main()
-			{
-				vUv = uv;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );				 
-			}
+            void main()
+            {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );                
+            }
 
-		</script>
+        </script>
 
-		<script id="simpleFragmentShader" type="x-shader/x-fragment">
+        <script id="simpleFragmentShader" type="x-shader/x-fragment">
 
-			void main()
-			{
-				gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-			}
+            void main()
+            {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            }
 
-		</script>
+        </script>
 
-		<script>
+        <script>
 
-			var container, stats;
+            var container, stats;
 
-			var camera, scene, renderer;
+            var camera, scene, renderer;
 
-			var sceneRTT;
+            var sceneRTT;
 
-			var text, plane;
+            var text, plane;
 
-			var speed = 50;			
+            var speed = 50;         
 
-			var targetRotation = 0;
-			var targetRotationOnMouseDown = 0;
+            var targetRotation = 0;
+            var targetRotationOnMouseDown = 0;
 
-			var mouseX = 0;
-			var mouseXOnMouseDown = 0;
+            var mouseX = 0;
+            var mouseXOnMouseDown = 0;
 
-			var windowHalfX = window.innerWidth / 2;
-			var windowHalfY = window.innerHeight / 2;
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
 
-			var delta = 1, clock = new THREE.Clock();
+            var delta = 1, clock = new THREE.Clock();
 
-			var shape, particleCloud, sparksEmitter, emitterPos;
-			var _rotation = 0;
-			var timeOnShapePath = 0;
+            var shape, particleCloud, sparksEmitter, emitterPos;
+            var _rotation = 0;
+            var timeOnShapePath = 0;
 
-			var composer;
+            var composer;
 
-			var lavaMaterial, effectDistortion;
-			var distortionScale = 0.02;
+            var lavaMaterial, effectDistortion;
+            var distortionScale = 0.02;
 
-			init();
-			animate();
+            init();
+            animate();
 
-			function init() {
+            function init() {
 
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
 
-				var info = document.createElement( 'div' );
-				info.style.position = 'absolute';
-				info.style.top = '10px';
-				info.style.width = '100%';
-				info.style.textAlign = 'center';
-				info.innerHTML = 
-					'Three.js - Distortion effect by <a href="http://www.santi-sanchez.com">Santiago Sanchez</a>';
-				container.appendChild( info );
+                var info = document.createElement( 'div' );
+                info.style.position = 'absolute';
+                info.style.top = '10px';
+                info.style.width = '100%';
+                info.style.textAlign = 'center';
+                info.innerHTML = 
+                    'Three.js - Distortion effect by <a href="http://www.santi-sanchez.com">Santiago Sanchez</a>';
+                container.appendChild( info );
 
-				// CAMERA
+                // CAMERA
 
-				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 2000 );
-				camera.position.set( 0, 150, 400 );
+                camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 2000 );
+                camera.position.set( 0, 150, 400 );
 
-				rtTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, 
-					{ minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } );
+                rtTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, 
+                    { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } );
 
-				// SCENE
+                // SCENE
 
-				scene = new THREE.Scene();
-				sceneRTT = new THREE.Scene();				
+                scene = new THREE.Scene();
+                sceneRTT = new THREE.Scene();               
 
-				// LAVA TORUS				
+                // LAVA TORUS               
 
-				lavaMaterial = new THREE.ShaderMaterial( {
-					uniforms: {
-						fogDensity: { type: "f", value: 0.45 },
-						fogColor: { type: "v3", value: new THREE.Vector3( 0, 0, 0 ) },
-						time: { type: "f", value: 1.0 },
-						resolution: { type: "v2", value: new THREE.Vector2() },
-						uvScale: { type: "v2", value: new THREE.Vector2( 3.0, 1.0 ) },
-						texture1: { type: "t", value: THREE.ImageUtils.loadTexture( "textures/lava/cloud.png" ) },
-						texture2: { type: "t", value: THREE.ImageUtils.loadTexture( "textures/lava/lavatile.jpg" ) }
-					},
-					vertexShader: document.getElementById( 'lavaVertexShader' ).textContent,
-					fragmentShader: document.getElementById( 'lavaFragmentShader' ).textContent
-				} );
+                lavaMaterial = new THREE.ShaderMaterial( {
+                    uniforms: {
+                        fogDensity: { type: "f", value: 0.45 },
+                        fogColor: { type: "v3", value: new THREE.Vector3( 0, 0, 0 ) },
+                        time: { type: "f", value: 1.0 },
+                        resolution: { type: "v2", value: new THREE.Vector2() },
+                        uvScale: { type: "v2", value: new THREE.Vector2( 3.0, 1.0 ) },
+                        texture1: { type: "t", value: THREE.ImageUtils.loadTexture( "textures/lava/cloud.png" ) },
+                        texture2: { type: "t", value: THREE.ImageUtils.loadTexture( "textures/lava/lavatile.jpg" ) }
+                    },
+                    vertexShader: document.getElementById( 'lavaVertexShader' ).textContent,
+                    fragmentShader: document.getElementById( 'lavaFragmentShader' ).textContent
+                } );
 
-				lavaMaterial.uniforms.texture1.value.wrapS = lavaMaterial.uniforms.texture1.value.wrapT = THREE.RepeatWrapping;
-				lavaMaterial.uniforms.texture2.value.wrapS = lavaMaterial.uniforms.texture2.value.wrapT = THREE.RepeatWrapping;
+                lavaMaterial.uniforms.texture1.value.wrapS = lavaMaterial.uniforms.texture1.value.wrapT = THREE.RepeatWrapping;
+                lavaMaterial.uniforms.texture2.value.wrapS = lavaMaterial.uniforms.texture2.value.wrapT = THREE.RepeatWrapping;
 
-				var torusRadius = 150;
-				var torus = new THREE.TorusGeometry( torusRadius, 40, 30, 30 );
-				var torusMesh = new THREE.Mesh(torus , lavaMaterial );
-				
-				torusMesh.position.x = 0;
-				torusMesh.position.y = 25;
-				torusMesh.position.z = -25;
+                var torusRadius = 150;
+                var torus = new THREE.TorusGeometry( torusRadius, 40, 30, 30 );
+                var torusMesh = new THREE.Mesh(torus , lavaMaterial );
+                
+                torusMesh.position.x = 0;
+                torusMesh.position.y = 25;
+                torusMesh.position.z = -25;
 
-				torusMesh.rotation.x = Math.PI * 0.5;
+                torusMesh.rotation.x = Math.PI * 0.5;
 
-				parent = new THREE.Object3D();
-				parent.add( torusMesh );
-				scene.add( parent );
+                parent = new THREE.Object3D();
+                parent.add( torusMesh );
+                scene.add( parent );
 
-				var simpleMaterial = new THREE.ShaderMaterial({
-					uniforms: {},
-					vertexShader: document.getElementById( 'simpleVertexShader' ).textContent,
-					fragmentShader: document.getElementById( 'simpleFragmentShader' ).textContent
-				});
+                var simpleMaterial = new THREE.ShaderMaterial({
+                    uniforms: {},
+                    vertexShader: document.getElementById( 'simpleVertexShader' ).textContent,
+                    fragmentShader: document.getElementById( 'simpleFragmentShader' ).textContent
+                });
 
-				var torusMeshSimple = new THREE.Mesh(torus, simpleMaterial);
-				torusMeshSimple.position = torusMesh.position;
-				torusMeshSimple.rotation.x = torusMesh.rotation.x;
-				sceneRTT.add(torusMeshSimple);
+                var torusMeshSimple = new THREE.Mesh(torus, simpleMaterial);
+                torusMeshSimple.position = torusMesh.position;
+                torusMeshSimple.rotation.x = torusMesh.rotation.x;
+                sceneRTT.add(torusMeshSimple);
 
 
-				// Create particle objects for Three.js
-				var particlesLength = 70000;
+                // Create particle objects for Three.js
+                var particlesLength = 70000;
 
-				var particles = new THREE.Geometry();
+                var particles = new THREE.Geometry();
 
-				function newpos( x, y, z ) {
-					return new THREE.Vector3( x, y, z );
-				}
+                function newpos( x, y, z ) {
+                    return new THREE.Vector3( x, y, z );
+                }
 
 
-				var Pool = {
+                var Pool = {
 
-					__pools: [],
+                    __pools: [],
 
-					// Get a new Vector
-					get: function() {
+                    // Get a new Vector
+                    get: function() {
 
-						if ( this.__pools.length > 0 ) {
-							return this.__pools.pop();
-						}
-						console.log( "pool ran out!" )
-						return null;
-					},
+                        if ( this.__pools.length > 0 ) {
+                            return this.__pools.pop();
+                        }
+                        console.log( "pool ran out!" )
+                        return null;
+                    },
 
-					// Release a vector back into the pool
+                    // Release a vector back into the pool
 
-					add: function( v ) {
-						this.__pools.push( v );
-					}
-				};
+                    add: function( v ) {
+                        this.__pools.push( v );
+                    }
+                };
 
 
-				for ( i = 0; i < particlesLength; i ++ ) {
-					particles.vertices.push( newpos( Math.random() * 200 - 100, Math.random() * 100 + 150, Math.random() * 50 ) );
-					Pool.add( i );
-				}
+                for ( i = 0; i < particlesLength; i ++ ) {
+                    particles.vertices.push( newpos( Math.random() * 200 - 100, Math.random() * 100 + 150, Math.random() * 50 ) );
+                    Pool.add( i );
+                }
 
 
-				// Create pools of vectors
+                // Create pools of vectors
 
-				attributes = {
-					size:  { type: 'f', value: [] },
-					pcolor: { type: 'c', value: [] }
-				};
+                attributes = {
+                    size:  { type: 'f', value: [] },
+                    pcolor: { type: 'c', value: [] }
+                };
 
-				var sprite = generateSprite() ;
-				texture = new THREE.Texture( sprite );
-				texture.needsUpdate = true;
+                var sprite = generateSprite() ;
+                texture = new THREE.Texture( sprite );
+                texture.needsUpdate = true;
 
-				uniforms = {
-					texture:   { type: "t", value: texture }
-				};
+                uniforms = {
+                    texture:   { type: "t", value: texture }
+                };
 
-				// PARAMETERS
+                // PARAMETERS
 
-				// Steadycounter
-				// Life
-				// Opacity
-				// Hue Speed
-				// Movement Speed
+                // Steadycounter
+                // Life
+                // Opacity
+                // Hue Speed
+                // Movement Speed
 
-				function generateSprite() {
+                function generateSprite() {
 
-					var canvas = document.createElement( 'canvas' );
-					canvas.width = 128;
-					canvas.height = 128;
+                    var canvas = document.createElement( 'canvas' );
+                    canvas.width = 128;
+                    canvas.height = 128;
 
-					var context = canvas.getContext( '2d' );
+                    var context = canvas.getContext( '2d' );
 
-					// Just a square, doesnt work too bad with blur pp.
-					// context.fillStyle = "white";
-					// context.strokeStyle = "white";
-					// context.fillRect(0, 0, 63, 63) ;
+                    // Just a square, doesnt work too bad with blur pp.
+                    // context.fillStyle = "white";
+                    // context.strokeStyle = "white";
+                    // context.fillRect(0, 0, 63, 63) ;
 
-					// Heart Shapes are not too pretty here
-					// var x = 4, y = 0;
-					// context.save();
-					// context.scale(8, 8); // Scale so canvas render can redraw within bounds
-					// context.beginPath();
-					// context.bezierCurveTo( x + 2.5, y + 2.5, x + 2.0, y, x, y );
-					// context.bezierCurveTo( x - 3.0, y, x - 3.0, y + 3.5,x - 3.0,y + 3.5 );
-					// context.bezierCurveTo( x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5 );
-					// context.bezierCurveTo( x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5 );
-					// context.bezierCurveTo( x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y );
-					// context.bezierCurveTo( x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5 );
+                    // Heart Shapes are not too pretty here
+                    // var x = 4, y = 0;
+                    // context.save();
+                    // context.scale(8, 8); // Scale so canvas render can redraw within bounds
+                    // context.beginPath();
+                    // context.bezierCurveTo( x + 2.5, y + 2.5, x + 2.0, y, x, y );
+                    // context.bezierCurveTo( x - 3.0, y, x - 3.0, y + 3.5,x - 3.0,y + 3.5 );
+                    // context.bezierCurveTo( x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5 );
+                    // context.bezierCurveTo( x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5 );
+                    // context.bezierCurveTo( x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y );
+                    // context.bezierCurveTo( x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5 );
 
-					context.beginPath();
-					context.arc( 64, 64, 60, 0, Math.PI * 2, false) ;
+                    context.beginPath();
+                    context.arc( 64, 64, 60, 0, Math.PI * 2, false) ;
 
-					context.lineWidth = 0.5; //0.05
-					context.stroke();
-					context.restore();
+                    context.lineWidth = 0.5; //0.05
+                    context.stroke();
+                    context.restore();
 
-					var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
+                    var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
 
-					gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
-					gradient.addColorStop( 0.2, 'rgba(255,255,255,1)' );
-					gradient.addColorStop( 0.4, 'rgba(200,200,200,1)' );
-					gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
+                    gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
+                    gradient.addColorStop( 0.2, 'rgba(255,255,255,1)' );
+                    gradient.addColorStop( 0.4, 'rgba(200,200,200,1)' );
+                    gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
 
-					context.fillStyle = gradient;
+                    context.fillStyle = gradient;
 
-					context.fill();
+                    context.fill();
 
-					return canvas;
-				}
+                    return canvas;
+                }
 
 
-				var shaderMaterial = new THREE.ShaderMaterial( {
-					uniforms: 		uniforms,
-					attributes:     attributes,
+                var shaderMaterial = new THREE.ShaderMaterial( {
+                    uniforms:       uniforms,
+                    attributes:     attributes,
 
-					vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-					fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+                    vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
 
-					blending: 		THREE.AdditiveBlending,
-					depthWrite:		false,
-					transparent:	true
-				});
+                    blending:       THREE.AdditiveBlending,
+                    depthWrite:     false,
+                    transparent:    true
+                });
 
-				particleCloud = new THREE.ParticleSystem( particles, shaderMaterial );
+                particleCloud = new THREE.ParticleSystem( particles, shaderMaterial );
 
-				particleCloud.dynamic = true;
-				// particleCloud.sortParticles = true;
+                particleCloud.dynamic = true;
+                // particleCloud.sortParticles = true;
 
-				var vertices = particleCloud.geometry.vertices;
-				var values_size = attributes.size.value;
-				var values_color = attributes.pcolor.value;
+                var vertices = particleCloud.geometry.vertices;
+                var values_size = attributes.size.value;
+                var values_color = attributes.pcolor.value;
 
-				for( var v = 0; v < vertices.length; v ++ ) {
-					values_size[ v ] = 10;
-					values_color[ v ] = new THREE.Color( 0x000000 );
-					particles.vertices[ v ].set( Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY );
-				}
+                for( var v = 0; v < vertices.length; v ++ ) {
+                    values_size[ v ] = 10;
+                    values_color[ v ] = new THREE.Color( 0x000000 );
+                    particles.vertices[ v ].set( Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY );
+                }
 
-				parent.add( particleCloud );				
-				sceneRTT.add( particleCloud.clone() );
+                parent.add( particleCloud );                
+                sceneRTT.add( particleCloud.clone() );
 
-				//particleCloud.y = 800;
+                //particleCloud.y = 800;
 
-				// Create Particle Systems	
+                // Create Particle Systems  
 
-				var x = 0, y = 0;
-				shape = new THREE.Shape();
-				var radius = torusRadius * 0.2;
-				shape.absellipse(x, y, radius, radius, 0, 2 * Math.PI, true);
+                var x = 0, y = 0;
+                shape = new THREE.Shape();
+                var radius = torusRadius * 0.2;
+                shape.absellipse(x, y, radius, radius, 0, 2 * Math.PI, true);
 
-				// shape.moveTo( x + 25, y + 25 );
-				// shape.bezierCurveTo( x + 25, y + 25, x + 20, y, x, y );
-				// shape.bezierCurveTo( x - 30, y, x - 30, y + 35,x - 30,y + 35 );
-				// shape.bezierCurveTo( x - 30, y + 55, x - 10, y + 77, x + 25, y + 95 );
-				// shape.bezierCurveTo( x + 60, y + 77, x + 80, y + 55, x + 80, y + 35 );
-				// shape.bezierCurveTo( x + 80, y + 35, x + 80, y, x + 50, y );
-				// shape.bezierCurveTo( x + 35, y, x + 25, y + 25, x + 25, y + 25 );
+                // shape.moveTo( x + 25, y + 25 );
+                // shape.bezierCurveTo( x + 25, y + 25, x + 20, y, x, y );
+                // shape.bezierCurveTo( x - 30, y, x - 30, y + 35,x - 30,y + 35 );
+                // shape.bezierCurveTo( x - 30, y + 55, x - 10, y + 77, x + 25, y + 95 );
+                // shape.bezierCurveTo( x + 60, y + 77, x + 80, y + 55, x + 80, y + 35 );
+                // shape.bezierCurveTo( x + 80, y + 35, x + 80, y, x + 50, y );
+                // shape.bezierCurveTo( x + 35, y, x + 25, y + 25, x + 25, y + 25 );
 
-				var hue = 0;
+                var hue = 0;
 
-				var setTargetParticle = function() {
-					var target = Pool.get();
-					values_size[ target ] = Math.random() * 50 + 20;
+                var setTargetParticle = function() {
+                    var target = Pool.get();
+                    values_size[ target ] = Math.random() * 50 + 20;
 
-					return target;
-				};
+                    return target;
+                };
 
-				var onParticleCreated = function( p ) {
+                var onParticleCreated = function( p ) {
 
-					var position = p.position;
-					p.target.position = position;
+                    var position = p.position;
+                    p.target.position = position;
 
-					var target = p.target;
+                    var target = p.target;
 
-					if ( target ) {
+                    if ( target ) {
 
-						// console.log(target,particles.vertices[target]);
-						// values_size[target]
-						// values_color[target]
+                        // console.log(target,particles.vertices[target]);
+                        // values_size[target]
+                        // values_color[target]
 
-						hue += 0.0003 * delta;
-						if ( hue > 1 ) hue -= 1;
+                        hue += 0.0003 * delta;
+                        if ( hue > 1 ) hue -= 1;
 
-						// TODO Create a PointOnShape Action/Zone in the particle engine
+                        // TODO Create a PointOnShape Action/Zone in the particle engine
 
-						timeOnShapePath += 0.00035 * delta;
-						if ( timeOnShapePath > 1 ) timeOnShapePath -= 1;
+                        timeOnShapePath += 0.00035 * delta;
+                        if ( timeOnShapePath > 1 ) timeOnShapePath -= 1;
 
-						var pointOnShape = shape.getPointAt( timeOnShapePath );
+                        var pointOnShape = shape.getPointAt( timeOnShapePath );
 
-						emitterpos.x = pointOnShape.x; // * 5 - 100;
-						emitterpos.z = -pointOnShape.y; // * 5 + 400;												
+                        emitterpos.x = pointOnShape.x; // * 5 - 100;
+                        emitterpos.z = -pointOnShape.y; // * 5 + 400;                                               
 
-						particles.vertices[ target ] = p.position;
+                        particles.vertices[ target ] = p.position;
 
-						values_color[ target ].setHSL( hue, 0.6, 0.1 );						
-					};
-				};
+                        values_color[ target ].setHSL( hue, 0.6, 0.1 );                     
+                    };
+                };
 
-				var onParticleDead = function( particle ) {
+                var onParticleDead = function( particle ) {
 
-					var target = particle.target;
-					if ( target ) {
-						// Hide the particle
-						values_color[ target ].setRGB( 0, 0, 0 );
-						particles.vertices[ target ].set( Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY );
+                    var target = particle.target;
+                    if ( target ) {
+                        // Hide the particle
+                        values_color[ target ].setRGB( 0, 0, 0 );
+                        particles.vertices[ target ].set( Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY );
 
-						// Mark particle system as available by returning to pool
+                        // Mark particle system as available by returning to pool
 
-						Pool.add( particle.target );
-					}
-				};
+                        Pool.add( particle.target );
+                    }
+                };
 
-				var engineLoopUpdate = function() {
+                var engineLoopUpdate = function() {
 
-				};
+                };
 
 
-				sparksEmitter = new SPARKS.Emitter( new SPARKS.SteadyCounter( 500 ) );
+                sparksEmitter = new SPARKS.Emitter( new SPARKS.SteadyCounter( 500 ) );
 
-				emitterpos = new THREE.Vector3().copy(torusMesh.position);
-				emitterpos.y -= 15;
+                emitterpos = new THREE.Vector3().copy(torusMesh.position);
+                emitterpos.y -= 15;
 
-				sparksEmitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone( emitterpos ) ) );
-				sparksEmitter.addInitializer( new SPARKS.Lifetime( 1, 15 ));
-				sparksEmitter.addInitializer( new SPARKS.Target( null, setTargetParticle ) );
+                sparksEmitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone( emitterpos ) ) );
+                sparksEmitter.addInitializer( new SPARKS.Lifetime( 1, 15 ));
+                sparksEmitter.addInitializer( new SPARKS.Target( null, setTargetParticle ) );
 
-				sparksEmitter.addInitializer( new SPARKS.Velocity( new SPARKS.PointZone( new THREE.Vector3( 0, 1, -1 ) ) ) );
-				// TOTRY Set velocity to move away from centroid
+                sparksEmitter.addInitializer( new SPARKS.Velocity( new SPARKS.PointZone( new THREE.Vector3( 0, 1, -1 ) ) ) );
+                // TOTRY Set velocity to move away from centroid
 
-				sparksEmitter.addAction( new SPARKS.Age() );
-				sparksEmitter.addAction( new SPARKS.Accelerate( 0, 50, -1 ) );
-				sparksEmitter.addAction( new SPARKS.Move() );
-				sparksEmitter.addAction( new SPARKS.RandomDrift( 200, 100, 2000 ) );
+                sparksEmitter.addAction( new SPARKS.Age() );
+                sparksEmitter.addAction( new SPARKS.Accelerate( 0, 50, -1 ) );
+                sparksEmitter.addAction( new SPARKS.Move() );
+                sparksEmitter.addAction( new SPARKS.RandomDrift( 200, 100, 2000 ) );
 
-				sparksEmitter.addCallback( "created", onParticleCreated );
-				sparksEmitter.addCallback( "dead", onParticleDead );
-				sparksEmitter.start();
+                sparksEmitter.addCallback( "created", onParticleCreated );
+                sparksEmitter.addCallback( "dead", onParticleDead );
+                sparksEmitter.start();
 
-				// End Particles
+                // End Particles
 
-				// Sky box
-				var r = "textures/cube/Park3Med/";
-				var urls = [ r + "px.jpg", r + "nx.jpg",
-							 r + "py.jpg", r + "ny.jpg",
-							 r + "pz.jpg", r + "nz.jpg" ];
+                // Sky box
+                var r = "textures/cube/Park3Med/";
+                var urls = [ r + "px.jpg", r + "nx.jpg",
+                             r + "py.jpg", r + "ny.jpg",
+                             r + "pz.jpg", r + "nz.jpg" ];
 
-				var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.UVMapping() );			
+                var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.UVMapping() );          
 
-				var shader = THREE.ShaderLib[ "cube" ];
-				shader.uniforms[ "tCube" ].value = textureCube;
+                var shader = THREE.ShaderLib[ "cube" ];
+                shader.uniforms[ "tCube" ].value = textureCube;
 
-				var material = new THREE.ShaderMaterial( {
-					fragmentShader: shader.fragmentShader,
-					vertexShader: shader.vertexShader,
-					uniforms: shader.uniforms,
-					side: THREE.BackSide
-				} );
+                var material = new THREE.ShaderMaterial( {
+                    fragmentShader: shader.fragmentShader,
+                    vertexShader: shader.vertexShader,
+                    uniforms: shader.uniforms,
+                    side: THREE.BackSide
+                } );
 
-				var cubemesh = new THREE.Mesh( new THREE.CubeGeometry( 2000, 2000, 2000 ), material );
-				scene.add( cubemesh );
+                var cubemesh = new THREE.Mesh( new THREE.CubeGeometry( 2000, 2000, 2000 ), material );
+                scene.add( cubemesh );
 
 
-				renderer = new THREE.WebGLRenderer();
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.setClearColor( 0x000000, 1 );
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                renderer.setClearColor( 0x000000, 1 );
 
-				container.appendChild( renderer.domElement );
+                container.appendChild( renderer.domElement );
 
-				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+                container.appendChild( stats.domElement );
 
-				// POST PROCESSING
-				var renderScene = new THREE.RenderPass( scene, camera );
+                // POST PROCESSING
+                var renderScene = new THREE.RenderPass( scene, camera );
 
-				var noiseSize = 128;				
-				var noiseScale = new THREE.Vector2(1.0, 1.0);
+                var noiseSize = 128;                
+                var noiseScale = new THREE.Vector2(1.0, 1.0);
 
-				effectDistortion = new THREE.ShaderPass(
-					{
-						uniforms: {
-							noiseTex: { type: "t", value: createNoiseTexture(noiseSize, noiseSize) },
-							maskTex: { type: "t", value: rtTexture },							
-							screenTex: { type: "t", value: null },							
-							time: { type: "f", value: 1.0 },
-							resolution: { type: "v2", value: new THREE.Vector2() },
-							scale: { type: "f", value: distortionScale },
-							noiseUvScale: { type: "v2", value: noiseScale }
-						},
-						vertexShader: document.getElementById( 'distortionVertexShader' ).textContent,
-						fragmentShader: document.getElementById( 'distortionFragmentShader' ).textContent					
-					},
-					"screenTex"
-				);
-				effectDistortion.uniforms.noiseTex.value.needsUpdate = true;
+                effectDistortion = new THREE.ShaderPass(
+                    {
+                        uniforms: {
+                            noiseTex: { type: "t", value: createNoiseTexture(noiseSize, noiseSize) },
+                            maskTex: { type: "t", value: rtTexture },                           
+                            screenTex: { type: "t", value: null },                          
+                            time: { type: "f", value: 1.0 },
+                            resolution: { type: "v2", value: new THREE.Vector2() },
+                            scale: { type: "f", value: distortionScale },
+                            noiseUvScale: { type: "v2", value: noiseScale }
+                        },
+                        vertexShader: document.getElementById( 'distortionVertexShader' ).textContent,
+                        fragmentShader: document.getElementById( 'distortionFragmentShader' ).textContent                   
+                    },
+                    "screenTex"
+                );
+                effectDistortion.uniforms.noiseTex.value.needsUpdate = true;
 
-				composer = new THREE.EffectComposer( renderer );
-				composer.addPass( renderScene );
-				composer.addPass( effectDistortion );
-				
-				effectDistortion.renderToScreen = true;
-				
-				onWindowResize();
-				window.addEventListener( 'resize', onWindowResize, false );
+                composer = new THREE.EffectComposer( renderer );
+                composer.addPass( renderScene );
+                composer.addPass( effectDistortion );
+                
+                effectDistortion.renderToScreen = true;
+                
+                onWindowResize();
+                window.addEventListener( 'resize', onWindowResize, false );
 
-				createGui();
-			}
+                createGui();
+            }
 
-			function createNoiseTexture(width, height) 
-			{
-				var perlin = new ImprovedNoise();
-				//var ctx2d = document.createElement('canvas').getContext('2d');
-				//var img = ctx2d.createImageData(width, height);
+            function createNoiseTexture(width, height) 
+            {
+                var perlin = new ImprovedNoise();
+                //var ctx2d = document.createElement('canvas').getContext('2d');
+                //var img = ctx2d.createImageData(width, height);
 
-				var size = width * height;
-				var data = new Uint8Array(3 * size);
+                var size = width * height;
+                var data = new Uint8Array(3 * size);
 
-				var invWidth = 1 / width; 
-				var invHeight = 1 / height;
+                var invWidth = 1 / width; 
+                var invHeight = 1 / height;
 
-				for (var i=0; i < width; i++) {
-					for (var j=0; j < height; j++)
-					{
-						var idx = (j * width + i) * 3;
-						var uv = new THREE.Vector2(i * invWidth, j * invHeight);						
-						
-						data[idx] = perlin.noise(uv.x * 50 + 0.5, uv.y * 50 + 0.5, 0) * 255;
-						data[idx+1] = perlin.noise(uv.x * 55 + 0.2, uv.y * 55 + 0.2, 0) * 255;						
-						data[idx+2] = 255;
-					}
-				}
+                for (var i=0; i < width; i++) {
+                    for (var j=0; j < height; j++)
+                    {
+                        var idx = (j * width + i) * 3;
+                        var uv = new THREE.Vector2(i * invWidth, j * invHeight);                        
+                        
+                        data[idx] = perlin.noise(uv.x * 50 + 0.5, uv.y * 50 + 0.5, 0) * 255;
+                        data[idx+1] = perlin.noise(uv.x * 55 + 0.2, uv.y * 55 + 0.2, 0) * 255;                      
+                        data[idx+2] = 255;
+                    }
+                }
 
-				return new THREE.DataTexture(data, width, height, THREE.RGBFormat, THREE.UnsignedByteType, new THREE.UVMapping(), 
-					THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.LinearFilter, THREE.LinearFilter);
-			}
+                return new THREE.DataTexture(data, width, height, THREE.RGBFormat, THREE.UnsignedByteType, new THREE.UVMapping(), 
+                    THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.LinearFilter, THREE.LinearFilter);
+            }
 
-			function createGui()
-			{
-				//GUI
-				var distortionParams  = {
-					scale: distortionScale,
-					disableDistortion: false,
-					viewDistortionMask: false,
-					pauseEmitters: false,
-					bloomStrength: 1.25
-				};
+            function createGui()
+            {
+                //GUI
+                var distortionParams  = {
+                    scale: distortionScale,
+                    disableDistortion: false,
+                    viewDistortionMask: false,
+                    pauseEmitters: false,
+                    bloomStrength: 1.25
+                };
 
-				var gui = new dat.GUI();
+                var gui = new dat.GUI();
 
-				gui.add(distortionParams, "scale", -0.2, 0.2, distortionScale).onChange(function() {
-					effectDistortion.uniforms.scale.value = distortionParams.scale; 
-				});
+                gui.add(distortionParams, "scale", -0.2, 0.2, distortionScale).onChange(function() {
+                    effectDistortion.uniforms.scale.value = distortionParams.scale; 
+                });
 
-				gui.add(distortionParams, "disableDistortion").onChange(function() 
-				{ 
-					if (distortionParams.disableDistortion === true) 
-					{
-						effectDistortion.material.defines.NO_DISTORTION = null;
-						effectDistortion.material.needsUpdate = true;
-						distortionParams.viewDistortionMask = false;
-					}
-					else //if (effectDistortion.material.defines.NO_DISTORTION)
-					{
-						delete effectDistortion.material.defines.NO_DISTORTION;
-						effectDistortion.material.needsUpdate = true;
-					}
-				});
+                gui.add(distortionParams, "disableDistortion").onChange(function() 
+                { 
+                    if (distortionParams.disableDistortion === true) 
+                    {
+                        effectDistortion.material.defines.NO_DISTORTION = null;
+                        effectDistortion.material.needsUpdate = true;
+                        distortionParams.viewDistortionMask = false;
+                    }
+                    else //if (effectDistortion.material.defines.NO_DISTORTION)
+                    {
+                        delete effectDistortion.material.defines.NO_DISTORTION;
+                        effectDistortion.material.needsUpdate = true;
+                    }
+                });
 
-				gui.add(distortionParams, "viewDistortionMask").onChange( function() 
-				{ 
-					if (distortionParams.viewDistortionMask === true) 
-					{
-						effectDistortion.material.defines.VIEW_DISTORTION_MASK = null;
-						effectDistortion.material.needsUpdate = true;
-						distortionParams.disableDistortion = false;
-					}
-					else //if (effectDistortion.material.defines.VIEW_DISTORTION_MASK)
-					{
-						delete effectDistortion.material.defines.VIEW_DISTORTION_MASK;
-						effectDistortion.material.needsUpdate = true;
-					}
-				});
+                gui.add(distortionParams, "viewDistortionMask").onChange( function() 
+                { 
+                    if (distortionParams.viewDistortionMask === true) 
+                    {
+                        effectDistortion.material.defines.VIEW_DISTORTION_MASK = null;
+                        effectDistortion.material.needsUpdate = true;
+                        distortionParams.disableDistortion = false;
+                    }
+                    else //if (effectDistortion.material.defines.VIEW_DISTORTION_MASK)
+                    {
+                        delete effectDistortion.material.defines.VIEW_DISTORTION_MASK;
+                        effectDistortion.material.needsUpdate = true;
+                    }
+                });
 
-				gui.add(distortionParams, "pauseEmitters").onChange( function() 
-				{ 
-					if (distortionParams.pauseEmitters === true)
-						sparksEmitter.stop();
-					else if (!sparksEmitter.isRunning())
-						sparksEmitter.start();					
-				});	
+                gui.add(distortionParams, "pauseEmitters").onChange( function() 
+                { 
+                    if (distortionParams.pauseEmitters === true)
+                        sparksEmitter.stop();
+                    else if (!sparksEmitter.isRunning())
+                        sparksEmitter.start();                  
+                }); 
 
-				/*gui.add(distortionParams, "bloomStrength", 0.0, 2.0, 1.25).onChange( function() {
-					effectBloom.strength = distortionParams.bloomStrength;
-				});*/
+                /*gui.add(distortionParams, "bloomStrength", 0.0, 2.0, 1.25).onChange( function() {
+                    effectBloom.strength = distortionParams.bloomStrength;
+                });*/
 
-				gui.close();
-			}
+                gui.close();
+            }
 
-			function onWindowResize() {
+            function onWindowResize() {
 
-				windowHalfX = window.innerWidth / 2;
-				windowHalfY = window.innerHeight / 2;
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				rtTexture.width = window.innerWidth;
-				rtTexture.height = window.innerHeight;
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                rtTexture.width = window.innerWidth;
+                rtTexture.height = window.innerHeight;
 
-				//
+                //
 
-				lavaMaterial.uniforms.resolution.value.x = window.innerWidth;
-				lavaMaterial.uniforms.resolution.value.y = window.innerHeight;
+                lavaMaterial.uniforms.resolution.value.x = window.innerWidth;
+                lavaMaterial.uniforms.resolution.value.y = window.innerHeight;
 
-				effectDistortion.uniforms.resolution.value.x = window.innerWidth;
-				effectDistortion.uniforms.resolution.value.y = window.innerHeight;
+                effectDistortion.uniforms.resolution.value.x = window.innerWidth;
+                effectDistortion.uniforms.resolution.value.y = window.innerHeight;
 
-				composer.reset();
-			}			
+                composer.reset();
+            }           
 
-			function animate() {
+            function animate() {
 
-				requestAnimationFrame( animate );
-				render();
-				stats.update();
-			}
+                requestAnimationFrame( animate );
+                render();
+                stats.update();
+            }
 
-			function render() {
+            function render() {
 
-				delta = speed * clock.getDelta();
+                delta = speed * clock.getDelta();
 
-				lavaMaterial.uniforms.time.value += 0.02 * delta;
-				effectDistortion.uniforms.time.value += 0.02 * delta;
+                lavaMaterial.uniforms.time.value += 0.02 * delta;
+                effectDistortion.uniforms.time.value += 0.02 * delta;
 
-				particleCloud.geometry.verticesNeedUpdate = true;
+                particleCloud.geometry.verticesNeedUpdate = true;
 
-				attributes.size.needsUpdate = true;
-				attributes.pcolor.needsUpdate = true;
+                attributes.size.needsUpdate = true;
+                attributes.pcolor.needsUpdate = true;
 
-				renderer.clear();
+                renderer.clear();
 
-				renderer.render( sceneRTT, camera, rtTexture, true );
-				
-				composer.render( 0.1 );
-			}
+                renderer.render( sceneRTT, camera, rtTexture, true );
+                
+                composer.render( 0.1 );
+            }
 
-		</script>
+        </script>
 
-	</body>
+    </body>
 </html>
