@@ -105,15 +105,15 @@ void Material::apply(const RenderContext& renderContext) const
 		it->second->bind(GL_TEXTURE2);
 		mGPUProgram.setUniform("SpecularMap", 2);
 	}	
-
-	aiMatrix4x4 aiWorldMatrix = renderContext.pAiNode->mTransformation;
-	aiWorldMatrix.Transpose();
-	glm::mat4 worldMatrix = glm::make_mat4(aiWorldMatrix[0]);
+	
+	glm::mat4 worldMatrix = renderContext.getCurrentWorldMatrix();
 	glm::mat4 wvpMatrix = renderContext.pCamera->getViewProjectionMatrix() * worldMatrix;
 
 	mGPUProgram.setUniform("WorldMatrix", worldMatrix);
 	mGPUProgram.setUniform("WVPMatrix", wvpMatrix);
 	mGPUProgram.setUniform("CameraPosition", renderContext.pCamera->getPosition());
+
+	mGPUProgram.setUniform("Time", renderContext.Time);
 }
 
 void Material::createVertexBuffer(const aiMesh& aiMesh, VertexBuffer& vertexBuffer) const
@@ -129,6 +129,7 @@ void Material::createVertexBuffer(const aiMesh& aiMesh, VertexBuffer& vertexBuff
 	float* const positionData = new float[vertexDataSize];
 	float* const normalData = new float[vertexDataSize];
 	float* const tangentData = new float[vertexDataSize];
+	float* const bitangentData = new float[vertexDataSize];
 	float* const uvData = new float[uvDataSize];
 
 	unsigned int index = 0, uvIndex = 0;
@@ -145,6 +146,10 @@ void Material::createVertexBuffer(const aiMesh& aiMesh, VertexBuffer& vertexBuff
 		tangentData[index + 1] = aiMesh.mTangents[i].y;
 		tangentData[index + 2] = aiMesh.mTangents[i].z;
 
+		bitangentData[index] = aiMesh.mBitangents[i].x;
+		bitangentData[index + 1] = aiMesh.mBitangents[i].y;
+		bitangentData[index + 2] = aiMesh.mBitangents[i].z;
+
 		uvData[uvIndex] = aiMesh.mTextureCoords[0][i].x;
 		if (aiMesh.mNumUVComponents[0] > 1) {
 			uvData[uvIndex + 1] = aiMesh.mTextureCoords[0][i].y;
@@ -154,8 +159,8 @@ void Material::createVertexBuffer(const aiMesh& aiMesh, VertexBuffer& vertexBuff
 		}
 	}
 
-	vertexBuffer.VBOs.resize(4);
-	glGenBuffers(4, &vertexBuffer.VBOs[0]);
+	vertexBuffer.VBOs.resize(5);
+	glGenBuffers(5, &vertexBuffer.VBOs[0]);
 	GLuint positionVBO = vertexBuffer.VBOs[0];
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glBufferData(GL_ARRAY_BUFFER, vertexDataSize * sizeof(positionData[0]), positionData, GL_STATIC_DRAW);
@@ -165,6 +170,9 @@ void Material::createVertexBuffer(const aiMesh& aiMesh, VertexBuffer& vertexBuff
 	GLuint tangentVBO = vertexBuffer.VBOs[2];
 	glBindBuffer(GL_ARRAY_BUFFER, tangentVBO);
 	glBufferData(GL_ARRAY_BUFFER, vertexDataSize * sizeof(tangentData[0]), tangentData, GL_STATIC_DRAW);
+	GLuint bitangentVBO = vertexBuffer.VBOs[2];
+	glBindBuffer(GL_ARRAY_BUFFER, bitangentVBO);
+	glBufferData(GL_ARRAY_BUFFER, vertexDataSize * sizeof(bitangentData[0]), bitangentData, GL_STATIC_DRAW);
 	GLuint texCoordVBO = vertexBuffer.VBOs[3];
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordVBO);
 	glBufferData(GL_ARRAY_BUFFER, uvDataSize * sizeof(uvData[0]), uvData, GL_STATIC_DRAW);
@@ -182,9 +190,12 @@ void Material::createVertexBuffer(const aiMesh& aiMesh, VertexBuffer& vertexBuff
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glBindBuffer(GL_ARRAY_BUFFER, tangentVBO);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glBindBuffer(GL_ARRAY_BUFFER, bitangentVBO);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
 	delete[] positionData;
 	delete[] normalData;
 	delete[] tangentData;
+	delete[] bitangentData;
 	delete[] uvData;
 }

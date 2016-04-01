@@ -54,3 +54,47 @@ void Mesh::destroy()
 	mVertexBuffer.clear();
 	mIndexBuffer.clear();
 }
+
+std::vector<glm::vec3> Mesh::getVertices() const
+{
+	assert(mAiMesh.HasPositions());
+	std::vector<glm::vec3> array;
+	for (unsigned int i=0; i < mAiMesh.mNumVertices; ++i) {
+		const aiVector3D& v = mAiMesh.mVertices[i];
+		array.push_back(glm::vec3(v.x, v.y, v.z));
+	}
+	return array;
+}
+
+std::vector<glm::vec3> Mesh::getNormals() const
+{
+	assert(mAiMesh.HasNormals());
+	std::vector<glm::vec3> array;
+	for (unsigned int i=0; i < mAiMesh.mNumVertices; ++i) {
+		const aiVector3D& v = mAiMesh.mNormals[i];
+		array.push_back(glm::vec3(v.x, v.y, v.z));
+	}
+	return array;
+}
+
+std::vector<glm::vec3> Mesh::getTangents() const
+{
+	assert(mAiMesh.HasTangentsAndBitangents());
+	std::vector<glm::vec3> array;
+	for (unsigned int i=0; i < mAiMesh.mNumVertices; ++i) {
+		const aiVector3D& v = mAiMesh.mTangents[i];
+		array.push_back(glm::vec3(v.x, v.y, v.z));
+	}
+	return array;
+}
+
+std::vector<glm::vec3> Mesh::getBitangents() const
+{
+	assert(mAiMesh.HasTangentsAndBitangents());
+	std::vector<glm::vec3> array;
+	for (unsigned int i=0; i < mAiMesh.mNumVertices; ++i) {
+		const aiVector3D& v = mAiMesh.mBitangents[i];
+		array.push_back(glm::vec3(v.x, v.y, v.z));
+	}
+	return array;
+}

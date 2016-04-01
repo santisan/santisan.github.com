@@ -14,41 +14,20 @@
 #include "Texture.h"
 #include "Material.h"
 #include "FirstPersonCamera.h"
-#include "RenderContext.h"
+#include "Renderer.h"
 #include "Input.h"
 
 using glm::mat4;
 using glm::vec3;
 using glm::vec2;
 
-class Renderer
-{
-public:
-	RenderContext& getRenderContext() { return mRenderContext; }
-	const RenderContext& getRenderContext() const { return mRenderContext; }
-
-	void render(const Mesh& mesh)
-	{
-		const VertexBuffer& vertexBuffer = mesh.getVertexBuffer();
-		const IndexBuffer& indexBuffer = mesh.getIndexBuffer();
-		assert(vertexBuffer.VAO);
-		assert(indexBuffer.ElementBuffer);
-
-		mesh.getMaterial().apply(mRenderContext);
-
-		glBindVertexArray(vertexBuffer.VAO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.ElementBuffer);
-		glDrawElements(GL_TRIANGLES, indexBuffer.IndexCount, GL_UNSIGNED_INT, (const void*)0);
-	}
-
-private:
-	RenderContext mRenderContext;
-};
+//#define DEBUG_DRAW
 
 class GLTest
 {
 	GLFWwindow* mpWindow;
 	GPUProgram mGPUProgram;
+	FirstPersonCamera mCamera;
 	std::unordered_map<const aiMesh*, Mesh> mMeshMap;
 	std::unordered_map<const aiMaterial*, Material> mMaterialMap;
 	Renderer mRenderer;
@@ -94,7 +73,7 @@ class GLTest
 				assert(pMaterial);
 				mMeshMap.insert(std::make_pair(pAiMesh, Mesh(*pAiMesh, *pMaterial)));
 				Mesh* pMesh = &mMeshMap.at(pAiMesh);
-				pMesh->createBuffers();				
+				pMesh->createBuffers();
 			}
 		}
 
@@ -117,6 +96,24 @@ class GLTest
 		for (unsigned int n=0; n < pNode->mNumChildren; ++n) {
 			renderSceneNode(pScene, pNode->mChildren[n]);
 		}
+	}
+
+	void renderSceneNodeDebug(const aiScene* const pScene, const aiNode* const pNode)
+	{
+#if defined(DEBUG_DRAW)
+		assert(pNode);
+		mRenderer.getRenderContext().pAiNode = pNode;
+
+		for (unsigned int m=0; m < pNode->mNumMeshes; ++m) {
+			const aiMesh* const pAiMesh = pScene->mMeshes[pNode->mMeshes[m]];
+			assert(pAiMesh);
+			mRenderer.renderDebug(mMeshMap.at(pAiMesh));
+		}
+
+		for (unsigned int n=0; n < pNode->mNumChildren; ++n) {
+			renderSceneNodeDebug(pScene, pNode->mChildren[n]);
+		}
+#endif
 	}
 
 	void destroyMeshes()
@@ -147,7 +144,7 @@ public:
 
 		glfwSetErrorCallback(GLTest::errorCallback);
 
-		mpWindow = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+		mpWindow = glfwCreateWindow(1024, 768, "Hello World", NULL, NULL);
 		if (!mpWindow) {
 			glfwTerminate();
 			return -1;
@@ -178,10 +175,10 @@ public:
 		glViewport(0, 0, width, height);
 		glfwSwapInterval(1);
 
-		std::string modelBasePath = "data/sponza/";
+		std::string modelBasePath = "data/cube/";
 		Assimp::Importer importer;
 		const struct aiScene* pScene = 
-			importer.ReadFile(modelBasePath + "sponza.obj", aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_FixInfacingNormals);
+			importer.ReadFile(modelBasePath + "cube.obj", aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_FixInfacingNormals);
 
 		if (!pScene) {
 			fprintf(stderr, "Failed to import scene: %s", importer.GetErrorString());
@@ -190,7 +187,7 @@ public:
 		}
 
 		Texture::setBasePath(modelBasePath);
-		Texture::setDefaultTexture(Texture::load("white.png"));
+		Texture::setDefaultTexture(Texture::load("textures/white.png"));
 
 		mGPUProgram.compileShader("data/basic.vert", ShaderType::VERTEX);
 		mGPUProgram.compileShader("data/basic.frag", ShaderType::FRAGMENT);		
@@ -201,11 +198,15 @@ public:
 
 		processSceneNode(pScene, pScene->mRootNode);
 
-		Input input(mpWindow);
-		FirstPersonCamera camera(input, 45.0f, static_cast<float>(width) / height, 0.1f, 10000.f);
-		camera.initialize();
-		camera.setPosition(0.0f, 0.0f, 100.0f);
-		mRenderer.getRenderContext().pCamera = &camera;
+		mCamera.setInput(Input(mpWindow));
+		mCamera.setFieldOfView(45.0f);
+		mCamera.setAspectRatio(static_cast<float>(width) / height);
+		mCamera.setNearPlaneDistance(0.1f);
+		mCamera.setFarPlaneDistance(10000.f);		
+		mCamera.setPosition(0.0f, 0.0f, 100.0f);
+		mCamera.setMovementRate(0.001f);
+		mCamera.initialize();
+		mRenderer.getRenderContext().pCamera = &mCamera;
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClearDepth(1.0f);
@@ -222,10 +223,13 @@ public:
 
 			glfwPollEvents();
 
-			camera.update(elapsedTime);
+			mCamera.update(elapsedTime);
+
+			mRenderer.getRenderContext().Time = static_cast<float>(totalTime);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 			renderSceneNode(pScene, pScene->mRootNode);
+			renderSceneNodeDebug(pScene, pScene->mRootNode);
 			glfwSwapBuffers(mpWindow);
 
 			const double currentTime = glfwGetTime();

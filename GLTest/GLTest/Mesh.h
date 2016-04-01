@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 #include <vector>
+#include <glm/vec3.hpp>
 #include "GPUBuffers.h"
 
 struct aiMesh;
@@ -16,6 +17,10 @@ public:
 	const Material& getMaterial() const { return mMaterial; }
 	const VertexBuffer& getVertexBuffer() const { return mVertexBuffer; }
 	const IndexBuffer& getIndexBuffer() const { return mIndexBuffer; }
+	std::vector<glm::vec3> getVertices() const;
+	std::vector<glm::vec3> getNormals() const;
+	std::vector<glm::vec3> getTangents() const;
+	std::vector<glm::vec3> getBitangents() const;
 
 	void createBuffers();
 	void destroy();
@@ -28,4 +33,3 @@ private:
 
 	void createIndexBuffer();
 };
-

@@ -5,7 +5,7 @@
 class Camera
 {
 public:
-    Camera(float aspectRatio);
+	Camera();
     Camera(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance);
 
     virtual ~Camera();
@@ -26,13 +26,18 @@ public:
     const glm::mat4& getProjectionMatrix();
     const glm::mat4& getViewProjectionMatrix();
 
+	void setFieldOfView(float value);
+	void setAspectRatio(float value);
+	void setNearPlaneDistance(float value);
+	void setFarPlaneDistance(float value);
+
     void setPosition(float x, float y, float z);
     void setPosition(const glm::vec3& position);
 	void setOrientation(float pitch, float yaw);
 	void offsetOrientation(float pitchOffset, float yawOffset);
 
     void reset();
-    void initialize();
+    virtual void initialize();
 
 	virtual void update(double elapsedTime);
 

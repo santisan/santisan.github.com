@@ -5,6 +5,10 @@
 class Input
 {
 public:
+	Input() : mpWindow(nullptr)
+	{
+	}
+
 	Input(GLFWwindow* pWindow) :
 		mpWindow(pWindow)
 	{

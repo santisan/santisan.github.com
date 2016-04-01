@@ -1,13 +1,12 @@
 #pragma once
 #include "Camera.h"
 #include <glm/vec2.hpp>
-
-class Input;
+#include "Input.h"
     
 class FirstPersonCamera : public Camera
 {
-public:
-    FirstPersonCamera(const Input& input, float aspectRatio);
+public:	
+    FirstPersonCamera();
     FirstPersonCamera(const Input& input, float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance);
 
     ~FirstPersonCamera();
@@ -16,10 +15,12 @@ public:
     float getRotationRate() const;
     float getMovementRate() const;
 
+	void setInput(const Input& input);
 	void setMouseSensitivity(float value);
     void setRotationRate(float value);
     void setMovementRate(float value);
-        
+	
+	void initialize() override;
     void update(double elapsedTime) override;
 
     static const float kDefaultMouseSensitivity;
@@ -30,7 +31,7 @@ private:
     float mMouseSensitivity;
     float mRotationRate;
     float mMovementRate;
-	const Input& mInput;
+	Input mInput;
 	glm::vec2 mPrevMousePos;
 
     FirstPersonCamera(const FirstPersonCamera& rhs);

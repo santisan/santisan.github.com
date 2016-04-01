@@ -6,15 +6,15 @@ const float Camera::kDefaultFieldOfView = glm::quarter_pi<const float>();
 const float Camera::kDefaultNearPlaneDistance = 0.01f;
 const float Camera::kDefaultFarPlaneDistance = 10000.0f;
 
-Camera::Camera(float aspectRatio)
-	: mIsViewDirty(true), mIsProjectionDirty(true), mFieldOfView(kDefaultFieldOfView), mAspectRatio(aspectRatio), 
+Camera::Camera() :
+	mIsViewDirty(true), mIsProjectionDirty(true), mFieldOfView(kDefaultFieldOfView), mAspectRatio(1.0f), 
 	mNearPlaneDistance(kDefaultNearPlaneDistance), mFarPlaneDistance(kDefaultFarPlaneDistance), mPosition(0.0f), mPitch(0.0f), mYaw(0.0f),
 	mViewMatrix(), mProjectionMatrix()
 {
 }
 
-Camera::Camera(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance)
-    : mIsViewDirty(true), mIsProjectionDirty(true), mFieldOfView(fieldOfView), mAspectRatio(aspectRatio), mNearPlaneDistance(nearPlaneDistance), 
+Camera::Camera(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance) : 
+    mIsViewDirty(true), mIsProjectionDirty(true), mFieldOfView(fieldOfView), mAspectRatio(aspectRatio), mNearPlaneDistance(nearPlaneDistance), 
 	mFarPlaneDistance(farPlaneDistance), mPosition(0.0f), mPitch(0.0f), mYaw(0.0f), mViewMatrix(), mProjectionMatrix()
 {
 }
@@ -104,6 +104,26 @@ const glm::mat4& Camera::getViewProjectionMatrix()
 		update(0.0f);
 	}
 	return mViewProjectionMatrix;
+}
+
+void Camera::setFieldOfView(float value)
+{
+	mFieldOfView = value;
+}
+
+void Camera::setAspectRatio(float value)
+{
+	mAspectRatio = value;
+}
+
+void Camera::setNearPlaneDistance(float value)
+{
+	mNearPlaneDistance = value;
+}
+
+void Camera::setFarPlaneDistance(float value)
+{
+	mFarPlaneDistance = value;
 }
 
 void Camera::setPosition(float x, float y, float z)

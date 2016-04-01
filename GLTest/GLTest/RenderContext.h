@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/mat4x4.hpp>
 
 class Camera;
 struct aiNode;
@@ -11,6 +12,9 @@ public:
 	{
 	}
 
+	glm::mat4 getCurrentWorldMatrix() const;
+
 	Camera* pCamera;
 	const aiNode* pAiNode;
+	float Time;
 };

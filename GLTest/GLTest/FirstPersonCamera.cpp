@@ -2,22 +2,21 @@
 #include <iostream>
 #include <glm/trigonometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Input.h"
 
 const float FirstPersonCamera::kDefaultRotationRate = glm::radians(0.01f);
 const float FirstPersonCamera::kDefaultMovementRate = 1.0f;
 const float FirstPersonCamera::kDefaultMouseSensitivity = 2.0f;
 
-FirstPersonCamera::FirstPersonCamera(const Input& input, float aspectRatio)
-	: Camera(aspectRatio), mMouseSensitivity(kDefaultMouseSensitivity), mRotationRate(kDefaultRotationRate), mMovementRate(kDefaultMovementRate),
-	mInput(input), mPrevMousePos(mInput.getMousePosition())
+FirstPersonCamera::FirstPersonCamera()
+	: Camera(), mMouseSensitivity(kDefaultMouseSensitivity), mRotationRate(kDefaultRotationRate), mMovementRate(kDefaultMovementRate),
+	mInput(), mPrevMousePos()
 {
 }
 
 FirstPersonCamera::FirstPersonCamera(const Input& input, float fieldOfView, float aspectRatio, float nearPlaneDistance, 
 									 float farPlaneDistance)
     : Camera(fieldOfView, aspectRatio, nearPlaneDistance, farPlaneDistance), mMouseSensitivity(kDefaultMouseSensitivity), 
-	mRotationRate(kDefaultRotationRate), mMovementRate(kDefaultMovementRate), mInput(input), mPrevMousePos(mInput.getMousePosition())
+	mRotationRate(kDefaultRotationRate), mMovementRate(kDefaultMovementRate), mInput(input), mPrevMousePos()
 {
 }
 
@@ -41,6 +40,11 @@ float FirstPersonCamera::getMovementRate() const
     return mMovementRate;
 }
 
+void FirstPersonCamera::setInput(const Input& input)
+{
+	mInput = input;
+}
+
 void FirstPersonCamera::setMouseSensitivity(float value)
 {
 	mMouseSensitivity = value;
@@ -54,6 +58,12 @@ void FirstPersonCamera::setRotationRate(float value)
 void FirstPersonCamera::setMovementRate(float value)
 {
 	mMovementRate = value;
+}
+
+void FirstPersonCamera::initialize()
+{
+	Camera::initialize();
+	mPrevMousePos = mInput.getMousePosition();
 }
 
 void FirstPersonCamera::update(double elapsedTime)
@@ -85,12 +95,12 @@ void FirstPersonCamera::update(double elapsedTime)
 	bool changedOrientation = false;
 	glm::vec2 mouseDelta(0.0f);
 
-	if (mInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
+	//if (mInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
 		const glm::vec2 mousePos = mInput.getMousePosition();
 		mouseDelta = mousePos - mPrevMousePos;
 		mPrevMousePos = mousePos;
 		changedOrientation = (mouseDelta != glm::vec2(0.0f));
-	}
+	//}
 
 	if (changedOrientation) {
 		const float pitch = mouseDelta.y * mMouseSensitivity * mRotationRate * fElapsedTime;
